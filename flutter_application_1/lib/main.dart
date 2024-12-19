@@ -39,43 +39,81 @@ class _MyHomePageState extends State<MyHomePage> {
   final JokeService _jokeService = JokeService();
   List<Joke> _jokes = [];
   bool _isLoading = false;
-  bool _isOffline = false;
+  bool _isOffline = true;
 
   @override
   void initState() {
     super.initState();
     _checkInternetAndFetchJokes();
+    
   }
 
-  Future<void> _checkInternetAndFetchJokes() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    
-    setState(() {
-      _isOffline = connectivityResult == ConnectivityResult.none;
-      _isLoading = true;
-    });
+Future<void> _checkInternetAndFetchJokes() async {
+  if (_isLoading) {
+    print("Already loading, returning early to prevent duplicate requests.");
+    return; // Prevent multiple simultaneous requests
+  }
+  print("Checking internet connectivity...");
 
-    try {
-      final jokes = await _jokeService.fetchJokes();
+  final connectivityResult = await Connectivity().checkConnectivity();
+  bool wasOffline = _isOffline;
+  print("Connectivity result: $connectivityResult");
+
+  setState(() {
+    _isOffline = connectivityResult != ConnectivityResult.none; // Check if offline
+    _isLoading = !_isOffline; // Only set loading to true if we're online
+  });
+
+  print("_isOffline: $_isOffline, wasOffline: $wasOffline");
+
+  // If we were offline but now online, show a positive message
+  if (wasOffline && !_isOffline) {
+    print("We were offline and now we're back online!");
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Back online! Fetching jokes...'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  try {
+    print("Fetching jokes...");
+    final jokes = await _jokeService.fetchJokes();
+
+    if (mounted) { // Check if widget is still mounted before updating state
       setState(() {
-        _jokes = jokes.take(5).toList();
+        _jokes = jokes.take(5).toList(); // Update jokes list
+        print("Jokes fetched and updated: ${_jokes.length} jokes loaded.");
       });
-      print("fvdfvdfvdfvdfvdfvdfvd\n");
-      print(_isOffline);
-    } catch (error) {
+    }
+  } catch (error) {
+    print("Error fetching jokes: $error");
+    if (mounted) { // Check if widget is still mounted before showing SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error fetching jokes: $error'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: _checkInternetAndFetchJokes, // Retry button
+          ),
         ),
       );
-    } finally {
+    }
+  } finally {
+    if (mounted) { // Check if widget is still mounted before setting state
       setState(() {
-        _isLoading = false;
+        _isLoading = false; // Reset loading status
+        print("Loading status set to false.");
       });
     }
   }
-  
+}
+
 
   @override
   Widget build(BuildContext context) {

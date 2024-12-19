@@ -37,9 +37,10 @@ dependencies:
   cupertino_icons: ^1.0.2
   dio: ^5.7.0
   shared_preferences: ^2.2.3
-  connectivity_plus: ^6.0.3
+  connectivity_plus: ^6.1.1
   json_annotation: ^4.9.0
   google_fonts: ^5.0.0
+  internet_connection_checker: ^1.0.0 
 
 dev_dependencies:
   flutter_test:
