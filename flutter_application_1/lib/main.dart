@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_application_1/AnimatedSplashScreen.dart';
+import 'package:flutter_application_1/JokeCard.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'joke_service.dart';
 import 'joke_model.dart';
@@ -21,7 +25,7 @@ class JokeApp extends StatelessWidget {
         primarySwatch: Colors.purple,
         brightness: Brightness.light,
       ),
-      home: const MyHomePage(title: 'Joke App'),
+      home:AnimatedSplashScreen(),
     );
   }
 }
@@ -45,70 +49,111 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _checkInternetAndFetchJokes();
-    
   }
 
 Future<void> _checkInternetAndFetchJokes() async {
   if (_isLoading) {
     print("Already loading, returning early to prevent duplicate requests.");
-    return; // Prevent multiple simultaneous requests
+    return;
   }
   print("Checking internet connectivity...");
 
+  setState(() {
+    _isLoading = true;
+  });
+
+  // First check connectivity status
   final connectivityResult = await Connectivity().checkConnectivity();
   bool wasOffline = _isOffline;
   print("Connectivity result: $connectivityResult");
 
+  // Actually test the connection by making a small request
+  bool hasInternet = false;
+  try {
+    final result = await InternetAddress.lookup('google.com');
+    hasInternet = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+  } on SocketException catch (_) {
+    hasInternet = false;
+  }
+
+  print("Actual internet connectivity: $hasInternet");
+
   setState(() {
-    _isOffline = connectivityResult != ConnectivityResult.none; // Check if offline
-    _isLoading = !_isOffline; // Only set loading to true if we're online
+    _isOffline = !hasInternet;
+    _isLoading = !_isOffline;
   });
 
-  print("_isOffline: $_isOffline, wasOffline: $wasOffline");
+  print("Current connection state - _isOffline: $_isOffline, wasOffline: $wasOffline");
 
-  // If we were offline but now online, show a positive message
+  // If we're offline, show appropriate message
+  if (_isOffline) {
+    print("Device is offline. Showing offline message.");
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No internet connection. Please check your WiFi.'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+    setState(() {
+      _isLoading = false;
+    });
+    return;
+  }
+
+  // If we were offline but now online, show reconnected message
   if (wasOffline && !_isOffline) {
-    print("We were offline and now we're back online!");
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Back online! Fetching jokes...'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
-    );
+    print("Connection restored! Was offline, now online.");
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Back online! Fetching jokes...'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   try {
-    print("Fetching jokes...");
+    print("Attempting to fetch jokes...");
     final jokes = await _jokeService.fetchJokes();
 
-    if (mounted) { // Check if widget is still mounted before updating state
+    if (mounted) {
       setState(() {
-        _jokes = jokes.take(5).toList(); // Update jokes list
-        print("Jokes fetched and updated: ${_jokes.length} jokes loaded.");
+        _jokes = jokes.take(5).toList();
+        print("Successfully fetched ${_jokes.length} jokes.");
       });
     }
   } catch (error) {
-    print("Error fetching jokes: $error");
-    if (mounted) { // Check if widget is still mounted before showing SnackBar
+    print("Error occurred while fetching jokes: $error");
+    if (mounted) {
+      // Set offline if we can't reach the server
+      setState(() {
+        _isOffline = true;
+        _isLoading = false;
+      });
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error fetching jokes: $error'),
+          content: const Text('Unable to fetch jokes. Please check your connection.'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 3),
           action: SnackBarAction(
             label: 'Retry',
             textColor: Colors.white,
-            onPressed: _checkInternetAndFetchJokes, // Retry button
+            onPressed: _checkInternetAndFetchJokes,
           ),
         ),
       );
     }
   } finally {
-    if (mounted) { // Check if widget is still mounted before setting state
+    if (mounted) {
       setState(() {
-        _isLoading = false; // Reset loading status
-        print("Loading status set to false.");
+        _isLoading = false;
+        print("Request completed. Loading status set to false.");
       });
     }
   }
@@ -201,7 +246,7 @@ ElevatedButton(
         ),
 ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Expanded(
               child: _jokes.isEmpty
                   ? const Center(child: Text('No jokes available'))
@@ -209,22 +254,12 @@ ElevatedButton(
                       itemCount: _jokes.length,
                       itemBuilder: (context, index) {
                         final joke = _jokes[index];
-                        return Card(
-                          elevation: 4,
-                          color:Color(0xFFFFF8E1),
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: Padding(
-                            padding: const EdgeInsets.all(15.0),
-                            child: Text(
-                              joke.setup != null
-                                  ? '${joke.setup} - ${joke.delivery}'
-                                  : joke.joke ?? 'No joke available',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.black),
-                            ),
-                          ),
-                        );
+return JokeCard(
+  jokeText: joke.setup != null
+      ? '${joke.setup} - ${joke.delivery}'
+      : joke.joke ?? 'No joke available',
+);
+
                       },
                     ),
             ),
