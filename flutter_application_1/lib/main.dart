@@ -53,10 +53,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
 Future<void> _checkInternetAndFetchJokes() async {
   if (_isLoading) {
-    print("Already loading, returning early to prevent duplicate requests.");
     return;
   }
-  print("Checking internet connectivity...");
 
   setState(() {
     _isLoading = true;
@@ -65,8 +63,6 @@ Future<void> _checkInternetAndFetchJokes() async {
   // First check connectivity status
   final connectivityResult = await Connectivity().checkConnectivity();
   bool wasOffline = _isOffline;
-  print("Connectivity result: $connectivityResult");
-
   // Actually test the connection by making a small request
   bool hasInternet = false;
   try {
@@ -76,18 +72,13 @@ Future<void> _checkInternetAndFetchJokes() async {
     hasInternet = false;
   }
 
-  print("Actual internet connectivity: $hasInternet");
-
   setState(() {
     _isOffline = !hasInternet;
     _isLoading = !_isOffline;
   });
 
-  print("Current connection state - _isOffline: $_isOffline, wasOffline: $wasOffline");
-
   // If we're offline, show appropriate message
   if (_isOffline) {
-    print("Device is offline. Showing offline message.");
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -105,7 +96,6 @@ Future<void> _checkInternetAndFetchJokes() async {
 
   // If we were offline but now online, show reconnected message
   if (wasOffline && !_isOffline) {
-    print("Connection restored! Was offline, now online.");
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -118,17 +108,14 @@ Future<void> _checkInternetAndFetchJokes() async {
   }
 
   try {
-    print("Attempting to fetch jokes...");
     final jokes = await _jokeService.fetchJokes();
 
     if (mounted) {
       setState(() {
         _jokes = jokes.take(5).toList();
-        print("Successfully fetched ${_jokes.length} jokes.");
       });
     }
   } catch (error) {
-    print("Error occurred while fetching jokes: $error");
     if (mounted) {
       // Set offline if we can't reach the server
       setState(() {
@@ -153,7 +140,6 @@ Future<void> _checkInternetAndFetchJokes() async {
     if (mounted) {
       setState(() {
         _isLoading = false;
-        print("Request completed. Loading status set to false.");
       });
     }
   }
@@ -163,7 +149,7 @@ Future<void> _checkInternetAndFetchJokes() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 255, 255, 255),
+      backgroundColor:const Color.fromARGB(255, 255, 255, 255),
       appBar:AppBar(
   title: Center(
     child: Text(
@@ -186,7 +172,7 @@ Future<void> _checkInternetAndFetchJokes() async {
         child: Icon(Icons.wifi, color: Color.fromARGB(255, 0, 0, 0)),
       ),
       
-  actions: [
+  actions: const [
     // Empty actions to balance the layout
     SizedBox(width: 56), // Matches the width of the leading icon
   ],
@@ -203,19 +189,19 @@ Container(
   decoration: BoxDecoration(
     borderRadius: BorderRadius.circular(30), // Oval shape
     border: Border.all(
-      color: _isOffline ? Color(0xFFFF0000 ) : Color(0xFF4CAF50 ),
+      color: _isOffline ?const Color(0xFFFF0000 ) :const Color(0xFF4CAF50 ),
       width: 2,
     ),
     color: _isOffline 
-      ? Color(0xFFFF0000 ).withOpacity(0.1)  // Light red background when offline
-      : Color(0xFF4CAF50 ).withOpacity(0.1)// Light black background when online
+      ?const Color(0xFFFF0000 ).withOpacity(0.1)  // Light red background when offline
+      :const Color(0xFF4CAF50 ).withOpacity(0.1)// Light black background when online
   ),
   child: Text(
     _isOffline ? 'Offline Mode' : 'Online Mode',
     style: TextStyle(
       fontSize: 15, 
       fontWeight: FontWeight.bold,
-      color: _isOffline ? Color(0xFFFF0000 ) : Color(0xFF4CAF50 ),
+      color: _isOffline ?const Color(0xFFFF0000 ) :const Color(0xFF4CAF50 ),
     ),
     textAlign: TextAlign.center,
   ),
@@ -230,9 +216,9 @@ ElevatedButton(
   onPressed: _isLoading ? null : _checkInternetAndFetchJokes,
   child: _isLoading
       ? const CircularProgressIndicator(color: Colors.white)
-      : Row(
+      : const Row(
           mainAxisSize: MainAxisSize.min, // Ensures the button size wraps content
-          children: const [
+          children:  [
             Icon(Icons.refresh), // Icon widget
             SizedBox(width: 8), // Spacing between icon and text
             Text(
