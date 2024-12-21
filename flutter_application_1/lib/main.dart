@@ -126,7 +126,7 @@ Future<void> _checkInternetAndFetchJokes() async {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Unable to fetch jokes. Please check your connection.'),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.orange,
           duration: const Duration(seconds: 3),
           action: SnackBarAction(
             label: 'Retry',
@@ -165,7 +165,7 @@ Future<void> _checkInternetAndFetchJokes() async {
   leading: _isOffline 
     ? const Padding(
         padding: EdgeInsets.all(16.0),
-        child: Icon(Icons.wifi_off_outlined, color: Color.fromARGB(255, 255, 0, 0)),
+        child: Icon(Icons.wifi_off_outlined, color: Colors.orange),
       )
     : const Padding(
         padding: EdgeInsets.all(16.0),
@@ -189,11 +189,11 @@ Container(
   decoration: BoxDecoration(
     borderRadius: BorderRadius.circular(30), // Oval shape
     border: Border.all(
-      color: _isOffline ?const Color(0xFFFF0000 ) :const Color(0xFF4CAF50 ),
+      color: _isOffline ? Colors.orange :const Color(0xFF4CAF50 ),
       width: 2,
     ),
     color: _isOffline 
-      ?const Color(0xFFFF0000 ).withOpacity(0.1)  // Light red background when offline
+      ? Colors.orange.withOpacity(0.1)  // Light red background when offline
       :const Color(0xFF4CAF50 ).withOpacity(0.1)// Light black background when online
   ),
   child: Text(
@@ -201,7 +201,7 @@ Container(
     style: TextStyle(
       fontSize: 15, 
       fontWeight: FontWeight.bold,
-      color: _isOffline ?const Color(0xFFFF0000 ) :const Color(0xFF4CAF50 ),
+      color: _isOffline ?Colors.orange :const Color(0xFF4CAF50 ),
     ),
     textAlign: TextAlign.center,
   ),
@@ -209,8 +209,8 @@ Container(
             const SizedBox(height: 16),
 ElevatedButton(
   style: ButtonStyle(
-    backgroundColor: MaterialStateProperty.all(Colors.amber), // Button background color
-    foregroundColor: MaterialStateProperty.all(Colors.black), // Text color
+    backgroundColor: _isOffline ? MaterialStateProperty.all(Colors.orange) : MaterialStateProperty.all(Colors.green), // Button background color
+    foregroundColor: MaterialStateProperty.all(Colors.white), // Text color
     elevation: MaterialStateProperty.all(4), // Button elevation
   ),
   onPressed: _isLoading ? null : _checkInternetAndFetchJokes,
@@ -225,7 +225,7 @@ ElevatedButton(
               'Refresh',
               style: TextStyle(
                 fontSize: 17,
-                color: Colors.black,
+                color: Colors.white,
               ),
             ),
           ],
@@ -244,6 +244,7 @@ return JokeCard(
   jokeText: joke.setup != null
       ? '${joke.setup} - ${joke.delivery}'
       : joke.joke ?? 'No joke available',
+  isOffline: _isOffline, // Pass the _isOffline value to the card
 );
 
                       },

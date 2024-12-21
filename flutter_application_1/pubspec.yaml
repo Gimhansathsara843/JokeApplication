@@ -62,6 +62,11 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/images/haha_emoji.gif
+    - assets/images/haha_emoji_static.gif
+    - assets/images/heart_emoji_static.gif
+    - assets/images/heart_emoji.gif
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
